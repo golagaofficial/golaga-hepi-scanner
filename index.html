@@ -56,8 +56,8 @@ button {
   <div id="result">Menunggu pemindaian QR Code...</div>
 
   <p class="small">
-    Setelah QR terbaca, periksa kode booking sebelum melanjutkan
-    validasi di halaman Admin GOLAGA HEPI.
+    Setelah QR terbaca, kode booking akan dikirim ke tab
+    Admin GOLAGA HEPI untuk diperiksa.
   </p>
 </div>
 
@@ -67,54 +67,72 @@ let processing = false;
 
 async function startScanner() {
   if (!window.Html5Qrcode) {
-    document.getElementById('result').textContent =
-      'Library scanner gagal dimuat. Periksa koneksi internet.';
+    showResult('Library scanner gagal dimuat. Periksa koneksi internet.');
     return;
   }
 
   try {
-    if (scanner) {
-      await stopScanner();
-    }
+    await stopScanner();
 
     scanner = new Html5Qrcode('reader');
 
     await scanner.start(
       { facingMode: 'environment' },
       { fps: 10, qrbox: { width: 250, height: 250 } },
-      async (decodedText) => {
+      async function(decodedText) {
         if (processing) return;
         processing = true;
 
-        document.getElementById('result').textContent =
-          'Kode booking terbaca: ' + decodedText;
+        const code = String(decodedText).trim();
+
+        showResult('QR terbaca: ' + code + '. Mengirim ke Admin GOLAGA HEPI...');
 
         await stopScanner();
+
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({
+            type: 'GOLAGA_HEPI_QR',
+            code: code
+          }, '*');
+
+          showResult(
+            'Kode booking ' + code +
+            ' sudah dikirim. Silakan lihat tab Admin GOLAGA HEPI.'
+          );
+        } else {
+          showResult(
+            'Kode booking terbaca: ' + code +
+            '. Tab admin tidak terhubung. Salin kode ini ke admin secara manual.'
+          );
+        }
       },
-      () => {}
+      function() {}
     );
 
-    document.getElementById('result').textContent =
-      'Kamera aktif. Arahkan ke QR Code e-tiket.';
+    showResult('Kamera aktif. Arahkan ke QR Code e-tiket.');
   } catch (error) {
-    document.getElementById('result').textContent =
-      'Kamera gagal dibuka: ' +
-      (error.message || error) +
-      '. Pastikan izin kamera diberikan.';
+    scanner = null;
+    processing = false;
+    showResult('Kamera gagal dibuka: ' + (error.message || error));
   }
 }
 
 async function stopScanner() {
   if (scanner) {
+    const oldScanner = scanner;
+    scanner = null;
+
     try {
-      if (scanner.isScanning) await scanner.stop();
-      await scanner.clear();
+      if (oldScanner.isScanning) await oldScanner.stop();
+      await oldScanner.clear();
     } catch (error) {
       console.log(error);
     }
-    scanner = null;
   }
-  processing = false;
+}
+
+function showResult(message) {
+  document.getElementById('result').textContent = message;
 }
 </script>
 </body>
