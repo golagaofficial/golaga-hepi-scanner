@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scanner QR GOLAGA HEPI</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f8f5;
+  color: #19372a;
+  margin: 0;
+  padding: 20px;
+}
+.container {
+  max-width: 560px;
+  margin: auto;
+  background: white;
+  padding: 22px;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px #0001;
+}
+h1 { color: #08783e; font-size: 24px; }
+button {
+  border: 0;
+  padding: 13px 16px;
+  margin: 5px 3px;
+  border-radius: 8px;
+  background: #08783e;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+.secondary { background: #eaf4ed; color: #145b3b; }
+#reader { width: 100%; margin-top: 15px; }
+#result {
+  margin-top: 15px;
+  padding: 12px;
+  background: #e8f7ed;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.small { font-size: 13px; line-height: 1.5; color: #63736a; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎟️ Scanner QR GOLAGA HEPI</h1>
+  <p>Arahkan kamera ke QR Code pada e-tiket.</p>
+
+  <button onclick="startScanner()">BUKA KAMERA</button>
+  <button class="secondary" onclick="stopScanner()">STOP KAMERA</button>
+
+  <div id="reader"></div>
+  <div id="result">Menunggu pemindaian QR Code...</div>
+
+  <p class="small">
+    Setelah QR terbaca, periksa kode booking sebelum melanjutkan
+    validasi di halaman Admin GOLAGA HEPI.
+  </p>
+</div>
+
+<script>
+let scanner = null;
+let processing = false;
+
+async function startScanner() {
+  if (!window.Html5Qrcode) {
+    document.getElementById('result').textContent =
+      'Library scanner gagal dimuat. Periksa koneksi internet.';
+    return;
+  }
+
+  try {
+    if (scanner) {
+      await stopScanner();
+    }
+
+    scanner = new Html5Qrcode('reader');
+
+    await scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      async (decodedText) => {
+        if (processing) return;
+        processing = true;
+
+        document.getElementById('result').textContent =
+          'Kode booking terbaca: ' + decodedText;
+
+        await stopScanner();
+      },
+      () => {}
+    );
+
+    document.getElementById('result').textContent =
+      'Kamera aktif. Arahkan ke QR Code e-tiket.';
+  } catch (error) {
+    document.getElementById('result').textContent =
+      'Kamera gagal dibuka: ' +
+      (error.message || error) +
+      '. Pastikan izin kamera diberikan.';
+  }
+}
+
+async function stopScanner() {
+  if (scanner) {
+    try {
+      if (scanner.isScanning) await scanner.stop();
+      await scanner.clear();
+    } catch (error) {
+      console.log(error);
+    }
+    scanner = null;
+  }
+  processing = false;
+}
+</script>
+</body>
+</html>
