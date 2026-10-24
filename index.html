@@ -78,7 +78,9 @@ async function startScanner() {
 
     await scanner.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+     {
+  fps: 10
+},
       async function(decodedText) {
         if (processing) return;
         processing = true;
