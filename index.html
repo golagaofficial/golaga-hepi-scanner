@@ -91,9 +91,12 @@ async function startScanner() {
 
         await stopScanner();
 
-       const adminURL = 'https://script.google.com/macros/s/AKfycbyBmDvM0-cj6nrQKR6pIcn_yeqra_-40LYbZuyN_MQnwQJ174h-vZ5kRxDMg6ggzPDDMg/exec?page=admin';
+       const adminURL = 'https://script.google.com/macros/s/AKfycbyBmDvM0-cj6nrQKR6pIcn_yeqra_-40LYbZuyN_MQnwQJ174h-vZ5kRxDMg6ggzPDDMg/exec';
 
-window.location.href = adminURL + '&code=' + encodeURIComponent(code);
+window.location.href =
+  adminURL +
+  '?page=admin&code=' +
+  encodeURIComponent(code);
       },
       function() {}
     );
